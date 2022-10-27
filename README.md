@@ -1,41 +1,53 @@
 
-Todays assignment:
+## Todays assignment:
 
+```
 You should create a program that takes two arguments.
 The first argument is a file with flight information.
 The second argument is a file with booking information.
 Your program should create files with a ticket for each booking.
+```
 
-Example running the program:
-
+**Example running the program:**
+```
 4a-tickets.exe flights.csv booking.csv
+```
 
-Will produce the files:
+**Will produce the files:**
 
+```
 ticket-1001.txt ticket-1002.txt ticket-1003.txt ticket-1004.txt
 ticket-1005.txt ticket-1006.txt ticket-1007.txt ticket-1008.txt
 ... etc
 
-Information:
+```
 
+**Information:**
+
+```
 Row seating is 2-3-2 the all flights
 Seats row 1 [  1][  2] -  [  3][  4][  5] - [  6][  7]
 Seats row 2 [  8][  9] -  [ 10][ 11][ 12] - [ 13][ 14]
 Seats row 3 [ 15][ 16] -  [ 17][ 18][ 19] - [ 20][ 21]
 Seats row 4 [ 22][ 23] -  [ 24][ 25][ 26] - [ 27][ 28]
 etc .....
+```
 
 However, the type of seating is different for the fligts.
 Some have more, some have less first class seats.
 Some have more, some have less business class seats.
 Some have more, some have less economy class seats.
+
 The flights information file contains this information aswell 
 as the flightnumber, departure, destination, date and time.
 
-Fields:
+**Fields:**
+```
 flightnumber,departure,destination,date,time,fseats,bseats,eseats
+```
 
-Example:
+**Example:**
+```
 304,GOT,CPH,2022-10-27,06:30,28,70,112
 304,GOT,CPH,2022-10-27,07:30,28,70,112
 304,GOT,CPH,2022-10-27,08:30,28,70,112
@@ -48,13 +60,15 @@ Example:
 312,STO,HEL,2022-10-27,06:30,28,70,112
 312,STO,HEL,2022-10-27,07:30,28,70,112
 312,STO,HEL,2022-10-27,08:30,28,70,112
+```
 
 
 The booking information have the following information.
 bookingnumber,date,time,departure,destination,seatclass,firstname,surname
 
-Example:
+**Example:**
 
+```
 1000,2022-10-27,06:30,GOT,LGW,first,Kalle,Kula
 1001,2022-10-27,06:30,GOT,LGW,first,Moa,Kula
 1002,2022-10-27,06:30,GOT,LGW,first,Johan,Kula
@@ -88,25 +102,30 @@ Example:
 2014,2022-10-27,06:30,STO,HEL,economy,Conny,Johansson
 2015,2022-10-27,06:30,STO,HEL,economy,Maja,Johansson
 
-Output:
+
+**Output:**
 
 The tickets should be written to files in the format:
 ticket-{bookingnumber}.txt
 
+```
 Each file should contain the following information: 
 BOOKING:{bookingnumber} 
 FLIGHT:{flight} DEPARTURE:{dep} DESTINATION: {dest} {date} {time}
 PASSENGER {firstname} {surname}
 CLASS: {seatclass}
 ROW {row} SEAT {seatnumber}
+```
 
 
-Example of ticket filename and content: 
+**Example of ticket filename and content: **
 
 ticket-2007.txt
 
+```
 BOOKING:2007
 FLIGHT:304 DEPARTURE:GOT DESTINATION:CPH 2022-10-27 06:30
 PASSENGER: Kalle Kula
 CLASS: first
 ROW:4 SEAT:24
+```
