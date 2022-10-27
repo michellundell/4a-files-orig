@@ -102,23 +102,21 @@ bookingnumber,date,time,departure,destination,seatclass,firstname,surname
 2014,2022-10-27,06:30,STO,HEL,economy,Conny,Johansson
 2015,2022-10-27,06:30,STO,HEL,economy,Maja,Johansson
 ```
-
-
 **Output:**
 
 The tickets should be written to files in the format:
-ticket-{bookingnumber}.txt
-
 ```
-Each file should contain the following information: 
+ticket-{bookingnumber}.txt
+```
+
+Each file should contain the following information in this format: 
+```
 BOOKING:{bookingnumber} 
 FLIGHT:{flight} DEPARTURE:{dep} DESTINATION: {dest} {date} {time}
 PASSENGER {firstname} {surname}
 CLASS: {seatclass}
 ROW {row} SEAT {seatnumber}
 ```
-
-
 **Example of ticket filename and content: **
 
 ticket-2007.txt
