@@ -117,10 +117,14 @@ PASSENGER {firstname} {surname}
 CLASS: {seatclass}
 ROW {row} SEAT {seatnumber}
 ```
-**Example of ticket filename and content: **
 
+**Example of ticket filename:**
+
+```
 ticket-2007.txt
+```
 
+**Example of ticket file content:**
 ```
 BOOKING:2007
 FLIGHT:304 DEPARTURE:GOT DESTINATION:CPH 2022-10-27 06:30
