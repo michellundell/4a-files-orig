@@ -1,9 +1,21 @@
+/**
+* @file 4a-text-file.c
+* @brief Example of writing and reading a text file.
+* @author Michel
+*/
 #include<stdio.h>
 #include<stdlib.h>
 
+/**
+ * main entry point of the program.
+ * @param[in] argc Number of command line arguments.
+ * @param[in] argv An array of pointers to null terminated arrays of characters (command line arguments).
+ * @param[out] returns 0 on success.
+*/
+
 int main(int argc, char **argv)
 {
-	int i=1,i10=10,i100=100,i1000=1000;
+	int i=1,i10=10,i100=100,i1000=1000; /* !< variables that keep numbers */
 
 	if( argc != 2 ) { 
 		fprintf(stderr,"No file given as an argument!"); 

@@ -1,14 +1,31 @@
+/**
+* @file 4a-binary-file.c
+* @author Michel Lundell
+* @copyright Michel Lundell
+*/
+
 #include<stdio.h>
 #include<stdlib.h>
+
+/**
+* @brief This is an example of data written/read to/from a file.
+*/
 
 typedef struct complex_data {
 	int x,y,value;
 } MyComplexData;
  
+/**
+ * main entry point of the program.
+ * @param[in] argc Number of command line arguments.
+ * @param[in] argv An array of pointers to null terminated arrays of characters (command line arguments).
+ * @param[out] returns 0 on success.
+*/
+
 int main(int argc, char **argv)
 {
-	MyComplexData cdout;
-	MyComplexData cdin;
+	MyComplexData cdout; /* !< data to be written */
+	MyComplexData cdin;  /* !< data to store the read data */
 
 	if( argc != 2 ) { 
 		fprintf(stderr,"No file given as an argument!"); 
