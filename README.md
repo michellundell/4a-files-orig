@@ -1,3 +1,9 @@
+## Todays agenda
+
+```
+Review 4a-text-file.c, an example of writing and reading a text file.
+Review 4a-binary-file.c, an example of writing and reading a binary file.
+```
 
 ## Todays assignment:
 
