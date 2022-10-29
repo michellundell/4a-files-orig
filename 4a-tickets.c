@@ -44,7 +44,7 @@ int main(int argc, char **argv)
 	fp1 = fopen(argv[1], "r");
 	fp2 = fopen(argv[2], "r");
 	// ENTER FILE.TXT HERE EXAMPLE: TICKET-####.TXT <- CHECK BOOKINGS.CSV/FLIGHTS.CSV FOR REFERRAL
-	merge = fopen("ENTER A FILE NAME HERE AND END IT WITH .TXT!", "w");
+	merge = fopen("ticket-1001.txt", "w");
 
 
 	if(!fp1 || !fp2 || !merge)
@@ -53,7 +53,7 @@ int main(int argc, char **argv)
 		exit(-1);
 	}
 	// keeps track of lines in file
-	int current_line = 10;
+	int current_line = 2;
 
 	do
 	{
@@ -79,7 +79,7 @@ int main(int argc, char **argv)
 
 	/* MANUAL CHANGE FOR ROW & SEAT */ 
 	/* !! MAKE SURE THE SEATS DON'T GET DUPLICATED. READ SEATS.TXT !! */
-	int row = 6, seat = 38;
+	int row = 1, seat = 5;
 
 	do
 	{
