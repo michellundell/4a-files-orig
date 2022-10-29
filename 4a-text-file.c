@@ -24,7 +24,7 @@ int main(int argc, char **argv)
 		fflush(stderr);
 		exit(-1); 
 	}
-
+	
 	fprintf(stdout,"Writing text file (csv)\n");
 
 	FILE *fp = fopen(argv[1],"w");
