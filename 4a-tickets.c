@@ -37,7 +37,7 @@ typedef struct bookingData
 
 /**
  * @brief Declare function to be used in another function to sort list
- * 
+ * Code I found online
  * @param head Booking head linked list
  * @param newNode Booking current list to sort
  */
@@ -45,7 +45,7 @@ void sortedInsert(bookings **head, bookings *newNode);
 
 /**
  * @brief Declare function prototype to used to sort the booking list
- * 
+ * Code I found online
  * @param head Booking head linked list
  */
 void insertSort(bookings **head);
