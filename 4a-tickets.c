@@ -90,7 +90,7 @@ int main(int argc, char **argv)
     }
 
     /**
-     * @brief Create pointer to flight linked list
+     * @brief Create head of flight list
      * 
      */
     flights *flightList = (flights *)malloc(sizeof(flights));
@@ -133,7 +133,7 @@ int main(int argc, char **argv)
     }
 
     /**
-     * @brief Create pointer to booking linked list
+     * @brief Create head of booking list
      * 
      */
     bookings *bookingList = (bookings *)malloc(sizeof(bookings));
@@ -161,7 +161,16 @@ int main(int argc, char **argv)
     free(tempB);
 
     fprintf(stdout, "\n\n");
+	/**
+	 * @brief Sort booking list
+	 * @param[in] bookingList
+	 */
     insertSort(&bookingList);
+	/**
+	 * @brief Print out tickets
+	 * @param[in] bookingList
+	 * @param[in] flightList
+	 */
     printTicket(bookingList, flightList);
 
     return 0;
