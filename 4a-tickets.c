@@ -36,27 +36,11 @@ typedef struct bookingData
 } bookings;
 
 /**
- * @brief Declare function to be used in another function to sort list
- * Code I found online
- * @param head Booking head linked list
- * @param newNode Booking current list to sort
+ * @brief Declare function prototypes
  */
-void sortedInsert(bookings **head, bookings *newNode);
-
-/**
- * @brief Declare function prototype to used to sort the booking list
- * Code I found online
- * @param head Booking head linked list
- */
-void insertSort(bookings **head);
-
-/**
- * @brief Declare function protoype to be used to print out tickets into txt files
- * 
- * @param bList Booking head linked list
- * @param fList Flight head linked list
- */
-void printTicket(bookings *bList, flights *fList);
+void sortedInsert(bookings **, bookings *);
+void insertSort(bookings **);
+void printTicket(bookings *, flights *);
 
 /**
  * main entry point of the program.
@@ -176,6 +160,12 @@ int main(int argc, char **argv)
     return 0;
 }
 
+/**
+ * @brief Define function to be used in another function to sort list
+ * Code I found online
+ * @param head Booking head linked list
+ * @param newNode Booking current list to sort
+ */
 void sortedInsert(bookings **head, bookings *newNode)
 {
     bookings dummy;
@@ -192,6 +182,11 @@ void sortedInsert(bookings **head, bookings *newNode)
     *head = dummy.next;
 }
 
+/**
+ * @brief Define function prototype to used to sort the booking list
+ * Code I found online
+ * @param head Booking head linked list
+ */
 void insertSort(bookings **head)
 {
     bookings *result = NULL;   
@@ -209,6 +204,12 @@ void insertSort(bookings **head)
     *head = result;
 }
 
+/**
+ * @brief Define function protoype to be used to print out tickets into txt files
+ * 
+ * @param bList Booking head linked list
+ * @param fList Flight head linked list
+ */
 void printTicket(bookings *bList, flights *fList)
 {
     for (bookings *nodeB = bList; nodeB != NULL; nodeB = nodeB->next)
