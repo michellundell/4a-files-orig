@@ -11,27 +11,32 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 /**
  * @brief 
  * 
  */
-typedef struct flightsInfo {
+typedef struct flightsInfoNode {
 	int flNum;
 	char dep[5];
 	char des[5];
 	char date[12];
 	char time[7];
-	int fSeats;
-	int bSeats;
-	int eSeats;
-} FInfo;
+	int fRows;
+	char *fSeatFlags;
+	int bRows;
+	char *bSeatFlags;
+	int eRows;
+	char *eSeatFlags;
+	struct flightsInfoNode *next;
+} FLNode;
 
 /**
  * @brief 
  * 
  */
-typedef struct bookingInfo {
+typedef struct bookingInfoNode {
 	int bNum;
 	char date[12];
 	char time[7];
@@ -40,27 +45,13 @@ typedef struct bookingInfo {
 	char sClass[10];
 	char fName[20];
 	char surname[20];
-} BInfo;
-
-/**
- * @brief 
- * 
- */
-typedef struct flightsListNode {
-	int key;
-	FInfo data;
-	struct flightsListNode *next;
-} FLNode;
-
-/**
- * @brief 
- * 
- */
-typedef struct bookingListNode {
-	int key;
-	BInfo data;
-	struct bookingListNode *next;
+	struct bookingInfoNode *next;
 } BLNode;
+
+FLNode* add_flights(const char *filename);
+BLNode* add_bookings(const char *filename);
+void deleteFList(FLNode *head);
+void deleteBList(BLNode *head);
 
 /**
  * main entry point of the program.
@@ -74,73 +65,91 @@ int main(int argc, char **argv)
 {
 	FLNode *fList = NULL;
 	BLNode *bList = NULL;
-	int ret;
-	int i = 0;
-	FILE *fpF = fopen("flights.csv", "r");
-	FLNode *newFNode = (FLNode *)malloc(sizeof(FLNode));
 
-	while ((ret = fscanf(fpF, "%d,%[^,],%[^,],%[^,],%[^,],%d,%d,%d\n", &newFNode->data.flNum, newFNode->data.dep, newFNode->data.des,
-						 newFNode->data.date, newFNode->data.time, &newFNode->data.fSeats, &newFNode->data.bSeats, &newFNode->data.eSeats)) > 0)
-	{
-		//printf("ret=%d\n", ret);
-		//printf("%d,%s,%s,%s,%s,%d,%d,%d\n", newFNode->data.flNum, newFNode->data.dep, newFNode->data.des, newFNode->data.date,
-		//		newFNode->data.time, newFNode->data.fSeats, newFNode->data.bSeats, newFNode->data.eSeats);
-		newFNode->key = i++;
-		newFNode->next = fList;
-		fList = newFNode;
-		newFNode = (FLNode *)malloc(sizeof(FLNode));
-	}
-	fclose(fpF);
-	free(newFNode);
-	newFNode = NULL;
+	fList = add_flights("flights.csv"); // argv[1]
+	bList = add_bookings("bookings.csv"); // argv[2]
 
 	for (FLNode *itF = fList; itF != NULL; itF = itF->next)
 	{
-		printf("Node id: %d\n", itF->key);
+		printf("Node id: %d\n", itF->flNum);
 	}
 	printf("\n");
-
-	FILE *fpB = fopen("bookings.csv", "r");
-	BLNode *newBNode = (BLNode *)malloc(sizeof(BLNode));
-	i = 0;
-	while ((ret = fscanf(fpB, "%d,%[^,],%[^,],%[^,],%[^,],%[^,],%[^,],%s\n", &newBNode->data.bNum, newBNode->data.date, newBNode->data.time,
-						 newBNode->data.dep, newBNode->data.des, newBNode->data.sClass, newBNode->data.fName, newBNode->data.surname)) > 0)
-	{
-		//printf("ret=%d\n", ret);
-		//printf("%d,%s,%s,%s,%s,%s,%s,%s\n", newBNode->data.bNum, newBNode->data.date, newBNode->data.time,
-		//				 newBNode->data.dep, newBNode->data.des, newBNode->data.sClass, newBNode->data.fName, newBNode->data.surname);
-		newBNode->key = i++;
-		newBNode->next = bList;
-		bList = newBNode;
-		newBNode = (BLNode *)malloc(sizeof(BLNode));
-	}
-	fclose(fpB);
-	free(newBNode);
-	newBNode = NULL;
 
 	for (BLNode *itB = bList; itB != NULL; itB = itB->next)
 	{
-		printf("Node id: %d\n", itB->key);
+		printf("Node id: %d\n", itB->bNum);
 	}
 	printf("\n");
 
-	FLNode *temp = NULL;
-	while (fList != NULL)
-	{
-		temp = fList;
-		fList = fList->next;
-		free(temp);
-		temp = NULL;
-	}
-
-	BLNode *tmp = NULL;
-	while (bList != NULL)
-	{
-		tmp = bList;
-		bList = bList->next;
-		free(tmp);
-		tmp = NULL;
-	}
+	deleteFList(fList);
+	fList = NULL;
+	deleteBList(bList);
+	bList = NULL;
 	
 	return 0;
+}
+
+FLNode* add_flights(const char *filename)
+{
+	FILE *fp = fopen(filename, "r");
+	FLNode newNode, *fList = NULL;
+
+	while (fscanf(fp, "%d,%[^,],%[^,],%[^,],%[^,],%d,%d,%d\n", &newNode.flNum, newNode.dep, newNode.des,
+				  newNode.date, newNode.time, &newNode.fRows, &newNode.bRows, &newNode.eRows) > 0)
+	{
+		FLNode *newFNode = (FLNode *)malloc(sizeof(FLNode));
+		memcpy(newFNode, &newNode, sizeof(FLNode));
+		newFNode->fSeatFlags = malloc(newNode.fRows*sizeof(char)*7);
+		memset(newFNode->fSeatFlags, 0, newNode.fRows*sizeof(char)*7);
+		newFNode->bSeatFlags = malloc(newNode.bRows*sizeof(char)*7);
+		memset(newFNode->bSeatFlags, 0, newNode.bRows*sizeof(char)*7);
+		newFNode->eSeatFlags = malloc(newNode.eRows*sizeof(char)*7);
+		memset(newFNode->eSeatFlags, 0, newNode.eRows*sizeof(char)*7);
+		newFNode->next = fList;
+		fList = newFNode;
+	}
+	fclose(fp);
+	return fList;
+}
+
+BLNode* add_bookings(const char *filename)
+{
+	FILE *fp = fopen(filename, "r");
+	BLNode newNode, *bList = NULL;
+
+	while (fscanf(fp, "%d,%[^,],%[^,],%[^,],%[^,],%[^,],%[^,],%s\n", &newNode.bNum, newNode.date, newNode.time,
+						 newNode.dep, newNode.des, newNode.sClass, newNode.fName, newNode.surname) > 0)
+	{
+		BLNode *newBNode = (BLNode *)malloc(sizeof(BLNode));
+		memcpy(newBNode, &newNode, sizeof(BLNode));
+		newBNode->next = bList;
+		bList = newBNode;
+	}
+	fclose(fp);
+	return bList;
+}
+
+void deleteFList(FLNode *head)
+{
+	FLNode *temp = NULL;
+	while (head != NULL)
+	{
+		temp = head;
+		head = head->next;
+		free(temp->fSeatFlags);
+		free(temp->bSeatFlags);
+		free(temp->eSeatFlags);
+		free(temp);
+	}
+}
+
+void deleteBList(BLNode *head)
+{
+	BLNode *temp = NULL;
+	while (head != NULL)
+	{
+		temp = head;
+		head = head->next;
+		free(temp);
+	}
 }
