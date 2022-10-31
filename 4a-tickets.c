@@ -3,8 +3,8 @@
  * @author Daniel Örhill (daniel.orhill@studerande.movant.se)
  * @brief This program takes flight and booking information and
  * create files with tickets.
- * @version 2
- * @date 2022-10-28
+ * @version 2.1
+ * @date 2022-10-31
  *
  * @copyright Copyright (c) 2022
  *
@@ -38,11 +38,12 @@ typedef struct bookingData
 /**
  * @brief Declare function prototypes
  */
-void sortedInsert(bookings **, bookings *);
-void insertSort(bookings **);
+void sortedBooking(bookings **, bookings *);
+void bookingSort(bookings **);
 void cancelFlights(flights **);
 void seatingMap(flights *);
 void printTicket(bookings *, flights *);
+
 
 /**
  * main entry point of the program.
@@ -146,12 +147,11 @@ int main(int argc, char **argv)
     bookingList = bookingList->next;
     free(tempB);
 
-    fprintf(stdout, "\n\n");
     /**
      * @brief Sort booking list
      * @param[in] bookingList
      */
-    insertSort(&bookingList);
+    bookingSort(&bookingList);
     /**
      * @brief Print out tickets
      * @param[in] bookingList
@@ -165,7 +165,7 @@ int main(int argc, char **argv)
     cancelFlights(&flightList);
     /**
      * @brief Print out seating chart
-     * 
+     *
      */
     seatingMap(flightList);
     return 0;
@@ -177,7 +177,7 @@ int main(int argc, char **argv)
  * @param head Booking head linked list
  * @param newNode Booking current list to sort
  */
-void sortedInsert(bookings **head, bookings *newNode)
+void sortedBooking(bookings **head, bookings *newNode)
 {
     bookings dummy;
     bookings *current = &dummy;
@@ -198,7 +198,7 @@ void sortedInsert(bookings **head, bookings *newNode)
  * Code I found online
  * @param head Booking head linked list
  */
-void insertSort(bookings **head)
+void bookingSort(bookings **head)
 {
     bookings *result = NULL;
     bookings *current = *head;
@@ -208,7 +208,7 @@ void insertSort(bookings **head)
     {
         next = current->next;
 
-        sortedInsert(&result, current);
+        sortedBooking(&result, current);
         current = next;
     }
 
@@ -224,6 +224,7 @@ void cancelFlights(flights **fList)
 {
     flights dummy;
     flights *current = &dummy;
+    flights *prev = &dummy;
     dummy.next = *fList;
 
     FILE *cancel = fopen("cancelled-flights.txt", "w");
@@ -233,22 +234,25 @@ void cancelFlights(flights **fList)
         fprintf(stderr, "Could not open cancelled flights file");
     }
 
-    for (flights *nodeF = &dummy; nodeF != NULL; nodeF = nodeF->next)
+    while (current != NULL)
     {
-        if (nodeF->next->fCurrent == 1 && nodeF->next->bCurrent == nodeF->next->fMax + 1 && nodeF->next->eCurrent == nodeF->next->fMax + nodeF->next->bMax + 1)
+        if (current->fCurrent == 1 && current->bCurrent == current->fMax + 1 && current->eCurrent == current->fMax + current->bMax + 1)
         {
-            fprintf(cancel, "%d,%s,%s,%s,%s,%d,%d,%d is cancelled\n", nodeF->next->flightN, nodeF->next->depart, nodeF->next->arrive, nodeF->next->date, nodeF->next->time, nodeF->next->fMax, nodeF->next->bMax, nodeF->next->eMax);
-            flights *temp = nodeF->next->next;
-            nodeF->next = temp;
+            fprintf(cancel, "%d,%s,%s,%s,%s is cancelled\n", current->flightN, current->depart, current->arrive, current->date, current->time);
+            prev->next = current->next;
+            free(current);
+            current = prev;
         }
+        prev = current;
+        current = current->next;
     }
-
+    *fList = dummy.next;
     fclose(cancel);
 }
 
 /**
  * @brief Define function to print out a txt file with seat chart of flights that are not cancelled
- * 
+ *
  * @param fList Flight List head
  */
 void seatingMap(flights *fList)
@@ -272,21 +276,21 @@ void seatingMap(flights *fList)
 
             if (seat < nodeF->fCurrent)
             {
-                fprintf(seatMap,"[1]");
+                fprintf(seatMap, "[1]");
             }
             else
             {
-                fprintf(seatMap,"[0]");
+                fprintf(seatMap, "[0]");
             }
             count++;
             if (count == 2 || count == 5)
             {
-                fprintf(seatMap," ");
+                fprintf(seatMap, " ");
             }
         }
-        fprintf(seatMap,"\n");
+        fprintf(seatMap, "\n");
         fprintf(seatMap, "bussiness class");
-        for (int seat = nodeF->fMax+1; seat <= nodeF->bMax; seat++)
+        for (int seat = nodeF->fMax + 1; seat <= nodeF->fMax + nodeF->bMax; seat++)
         {
             if (seat > 7 * row)
             {
@@ -297,21 +301,21 @@ void seatingMap(flights *fList)
 
             if (seat < nodeF->bCurrent)
             {
-                fprintf(seatMap,"[1]");
+                fprintf(seatMap, "[1]");
             }
             else
             {
-                fprintf(seatMap,"[0]");
+                fprintf(seatMap, "[0]");
             }
             count++;
             if (count == 2 || count == 5)
             {
-                fprintf(seatMap," ");
+                fprintf(seatMap, " ");
             }
         }
-        fprintf(seatMap,"\n");
+        fprintf(seatMap, "\n");
         fprintf(seatMap, "economy class");
-        for (int seat = nodeF->bMax+1; seat <= nodeF->eMax; seat++)
+        for (int seat = nodeF->fMax + nodeF->bMax + 1; seat <= nodeF->fMax + nodeF->bMax + nodeF->eMax; seat++)
         {
             if (seat > 7 * row)
             {
@@ -322,19 +326,19 @@ void seatingMap(flights *fList)
 
             if (seat < nodeF->eCurrent)
             {
-                fprintf(seatMap,"[1]");
+                fprintf(seatMap, "[1]");
             }
             else
             {
-                fprintf(seatMap,"[0]");
+                fprintf(seatMap, "[0]");
             }
             count++;
             if (count == 2 || count == 5)
             {
-                fprintf(seatMap," ");
+                fprintf(seatMap, " ");
             }
         }
-        fprintf(seatMap,"\n\n");
+        fprintf(seatMap, "\n\n");
     }
     fclose(seatMap);
 }
