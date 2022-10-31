@@ -3,7 +3,7 @@
  * @author Joakim Englund (joakimenglund@protonmail.com)
  * @brief This program takes flight and booking information and 
  * create files with tickets.
- * @version 0.1
+ * @version 0.2
  * @date 2022-10-27
  * 
  * @copyright Copyright (c) 2022
@@ -48,8 +48,9 @@ typedef struct bookingInfoNode {
 	struct bookingInfoNode *next;
 } BLNode;
 
-FLNode* add_flights(const char *filename);
-BLNode* add_bookings(const char *filename);
+FLNode* addFlights(const char *filename);
+BLNode* addBookings(const char *filename);
+void createTickets(const FLNode *fList, const BLNode *bList);
 void deleteFList(FLNode *head);
 void deleteBList(BLNode *head);
 
@@ -66,9 +67,11 @@ int main(int argc, char **argv)
 	FLNode *fList = NULL;
 	BLNode *bList = NULL;
 
-	fList = add_flights("flights.csv"); // argv[1]
-	bList = add_bookings("bookings.csv"); // argv[2]
+	fList = addFlights("flights.csv"); // argv[1]
+	bList = addBookings("bookings.csv"); // argv[2]
 
+	/*
+	// Print the damn things, for testing.
 	for (FLNode *itF = fList; itF != NULL; itF = itF->next)
 	{
 		printf("Node id: %d\n", itF->flNum);
@@ -80,6 +83,9 @@ int main(int argc, char **argv)
 		printf("Node id: %d\n", itB->bNum);
 	}
 	printf("\n");
+	*/
+
+	createTickets(fList, bList);
 
 	deleteFList(fList);
 	fList = NULL;
@@ -89,9 +95,21 @@ int main(int argc, char **argv)
 	return 0;
 }
 
-FLNode* add_flights(const char *filename)
+/**
+ * @brief 
+ * 
+ * @param filename 
+ * @return FLNode* 
+ */
+FLNode* addFlights(const char *filename)
 {
 	FILE *fp = fopen(filename, "r");
+	if (!fp)
+	{
+		fprintf(stderr, "Error! Could not open the file %s\n", filename);
+		exit(-1);
+	}
+
 	FLNode newNode, *fList = NULL;
 
 	while (fscanf(fp, "%d,%[^,],%[^,],%[^,],%[^,],%d,%d,%d\n", &newNode.flNum, newNode.dep, newNode.des,
@@ -112,9 +130,21 @@ FLNode* add_flights(const char *filename)
 	return fList;
 }
 
-BLNode* add_bookings(const char *filename)
+/**
+ * @brief 
+ * 
+ * @param filename 
+ * @return BLNode* 
+ */
+BLNode* addBookings(const char *filename)
 {
 	FILE *fp = fopen(filename, "r");
+	if (!fp)
+	{
+		fprintf(stderr, "Error! Could not open the file %s\n", filename);
+		exit(-1); // Will cause a memory leak due to lack of freeing of the flight-list. Possibly handle it with on_exit() and an exitHandler()-function.
+	}
+
 	BLNode newNode, *bList = NULL;
 
 	while (fscanf(fp, "%d,%[^,],%[^,],%[^,],%[^,],%[^,],%[^,],%s\n", &newNode.bNum, newNode.date, newNode.time,
@@ -129,6 +159,56 @@ BLNode* add_bookings(const char *filename)
 	return bList;
 }
 
+/**
+ * @brief Create a Tickets object
+ * 
+ * @param fList 
+ * @param bList 
+ */
+void createTickets(const FLNode *fList, const BLNode *bList)
+{
+	for (BLNode *BLIt = bList; BLIt != NULL; BLIt = BLIt->next)
+	{
+		for (FLNode *FLIt = fList; FLIt != NULL; FLIt = FLIt->next)
+		{
+			if (!strcmp(FLIt->dep, BLIt->dep) && !strcmp(FLIt->des, BLIt->des) && !strcmp(FLIt->date, BLIt->date) && !strcmp(FLIt->time, BLIt->time))
+			{
+				int row = 0, seat = 0;
+				if (allocateSeat(FLIt, BLIt, &row, &seat))
+				{
+					// createTicket(FLIt, BLIt, row, seat);
+				}
+				else
+				{
+					fprintf(stderr, "Error! Something went wrong with allocating a seat for booking #%d\n", BLIt->bNum);
+				}
+				break; // Break out of the flights-list loop when we find a match with a booking.
+			}
+		}
+		// If we reach this part, there is no matching flight for the current booking.
+		fprintf(stderr, "Error! Could not find a matching flight for booking #%d\n", BLIt->bNum);
+	}
+}
+
+/**
+ * @brief 
+ * 
+ * @param flight 
+ * @param booking 
+ * @param row 
+ * @param seat 
+ * @return int 
+ */
+int allocateSeat(FLNode *flight, BLNode *booking, int *row, int *seat)
+{
+	return 0; // Check if a seat is available and return the row number and seat number.
+}
+
+/**
+ * @brief 
+ * 
+ * @param head 
+ */
 void deleteFList(FLNode *head)
 {
 	FLNode *temp = NULL;
@@ -143,6 +223,11 @@ void deleteFList(FLNode *head)
 	}
 }
 
+/**
+ * @brief 
+ * 
+ * @param head 
+ */
 void deleteBList(BLNode *head)
 {
 	BLNode *temp = NULL;
