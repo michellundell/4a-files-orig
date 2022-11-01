@@ -3,7 +3,7 @@
  * @author Joakim Englund (joakimenglund@protonmail.com)
  * @brief This program takes flight and booking information and 
  * create files with tickets.
- * @version 0.2
+ * @version 1.0
  * @date 2022-10-27
  * 
  * @copyright Copyright (c) 2022
@@ -14,7 +14,7 @@
 #include <string.h>
 
 /**
- * @brief 
+ * @brief FLNode is a node in a linked list containing information about flights.
  * 
  */
 typedef struct flightsInfoNode {
@@ -33,7 +33,7 @@ typedef struct flightsInfoNode {
 } FLNode;
 
 /**
- * @brief 
+ * @brief BLNode is a node in a linked list containing information about bookings.
  * 
  */
 typedef struct bookingInfoNode {
@@ -50,7 +50,9 @@ typedef struct bookingInfoNode {
 
 FLNode* addFlights(const char *filename);
 BLNode* addBookings(const char *filename);
-void createTickets(const FLNode *fList, const BLNode *bList);
+void createTickets(FLNode *fList, BLNode *bList);
+int allocateSeat(FLNode *flight, BLNode *booking, int *row, int *seat);
+void createTicket(FLNode *flight, BLNode *booking, int row, int seat);
 void deleteFList(FLNode *head);
 void deleteBList(BLNode *head);
 
@@ -64,29 +66,19 @@ void deleteBList(BLNode *head);
 */
 int main(int argc, char **argv)
 {
+	// Create the linked lists.
 	FLNode *fList = NULL;
 	BLNode *bList = NULL;
 
-	fList = addFlights("flights.csv"); // argv[1]
-	bList = addBookings("bookings.csv"); // argv[2]
-
-	/*
-	// Print the damn things, for testing.
-	for (FLNode *itF = fList; itF != NULL; itF = itF->next)
+	// Add elements to the linked lists and create tickets.
+	fList = addFlights(argv[1]);
+	bList = addBookings(argv[2]);
+	if (fList && bList)
 	{
-		printf("Node id: %d\n", itF->flNum);
+		createTickets(fList, bList);
 	}
-	printf("\n");
 
-	for (BLNode *itB = bList; itB != NULL; itB = itB->next)
-	{
-		printf("Node id: %d\n", itB->bNum);
-	}
-	printf("\n");
-	*/
-
-	createTickets(fList, bList);
-
+	// Clean up properly.
 	deleteFList(fList);
 	fList = NULL;
 	deleteBList(bList);
@@ -96,24 +88,26 @@ int main(int argc, char **argv)
 }
 
 /**
- * @brief 
+ * @brief This function reads data about flights from the file given as a
+ * parameter, adds it to a linked list, and returns the linked list.
  * 
- * @param filename 
- * @return FLNode* 
+ * @param filename Name of file to read data from.
+ * @return FLNode* Returns a pointer to a linked list on success.
  */
 FLNode* addFlights(const char *filename)
 {
 	FILE *fp = fopen(filename, "r");
 	if (!fp)
 	{
-		fprintf(stderr, "Error! Could not open the file %s\n", filename);
-		exit(-1);
+		fprintf(stderr, "Error! Could not open the file: %s\n", filename);
+		return NULL;
 	}
 
 	FLNode newNode, *fList = NULL;
 
+	// Add nodes to the list while fscanf() reads 8 items from the file.
 	while (fscanf(fp, "%d,%[^,],%[^,],%[^,],%[^,],%d,%d,%d\n", &newNode.flNum, newNode.dep, newNode.des,
-				  newNode.date, newNode.time, &newNode.fRows, &newNode.bRows, &newNode.eRows) > 0)
+				  newNode.date, newNode.time, &newNode.fRows, &newNode.bRows, &newNode.eRows) == 8)
 	{
 		FLNode *newFNode = (FLNode *)malloc(sizeof(FLNode));
 		memcpy(newFNode, &newNode, sizeof(FLNode));
@@ -131,24 +125,26 @@ FLNode* addFlights(const char *filename)
 }
 
 /**
- * @brief 
+ * @brief This function reads data about bookings from the file given as a
+ * parameter, adds it to a linked list, and returns the linked list.
  * 
- * @param filename 
- * @return BLNode* 
+ * @param filename Name of file to read data from.
+ * @return BLNode* Returns a pointer to a linked list on success.
  */
 BLNode* addBookings(const char *filename)
 {
 	FILE *fp = fopen(filename, "r");
 	if (!fp)
 	{
-		fprintf(stderr, "Error! Could not open the file %s\n", filename);
-		exit(-1); // Will cause a memory leak due to lack of freeing of the flight-list. Possibly handle it with on_exit() and an exitHandler()-function.
+		fprintf(stderr, "Error! Could not open the file: %s\n", filename);
+		return NULL;
 	}
 
 	BLNode newNode, *bList = NULL;
 
+	// Add nodes to the list while fscanf() reads 8 items from the file.
 	while (fscanf(fp, "%d,%[^,],%[^,],%[^,],%[^,],%[^,],%[^,],%s\n", &newNode.bNum, newNode.date, newNode.time,
-						 newNode.dep, newNode.des, newNode.sClass, newNode.fName, newNode.surname) > 0)
+						 newNode.dep, newNode.des, newNode.sClass, newNode.fName, newNode.surname) == 8)
 	{
 		BLNode *newBNode = (BLNode *)malloc(sizeof(BLNode));
 		memcpy(newBNode, &newNode, sizeof(BLNode));
@@ -160,54 +156,143 @@ BLNode* addBookings(const char *filename)
 }
 
 /**
- * @brief Create a Tickets object
+ * @brief This function contains the logic to match bookings to flights and use
+ * that information to create tickets.
  * 
- * @param fList 
- * @param bList 
+ * @param fList A linked list containing information about flights.
+ * @param bList a linked list containing information about bookings.
  */
-void createTickets(const FLNode *fList, const BLNode *bList)
+void createTickets(FLNode *fList, BLNode *bList)
 {
 	for (BLNode *BLIt = bList; BLIt != NULL; BLIt = BLIt->next)
 	{
+		int foundMatch = 0;
 		for (FLNode *FLIt = fList; FLIt != NULL; FLIt = FLIt->next)
 		{
+			// If we find a matching flight for the booking..
 			if (!strcmp(FLIt->dep, BLIt->dep) && !strcmp(FLIt->des, BLIt->des) && !strcmp(FLIt->date, BLIt->date) && !strcmp(FLIt->time, BLIt->time))
 			{
 				int row = 0, seat = 0;
+				// Try to allocate a seat.
 				if (allocateSeat(FLIt, BLIt, &row, &seat))
 				{
-					// createTicket(FLIt, BLIt, row, seat);
+					// If successful, create a ticket and flag that we got a match.
+					createTicket(FLIt, BLIt, row, seat);
+					foundMatch = 1;
 				}
 				else
 				{
-					fprintf(stderr, "Error! Something went wrong with allocating a seat for booking #%d\n", BLIt->bNum);
+					// If unsuccessful, print an error message.
+					fprintf(stderr, "Error! Could not find a seat in %s class for booking #%d\n", BLIt->sClass, BLIt->bNum);
 				}
 				break; // Break out of the flights-list loop when we find a match with a booking.
 			}
 		}
-		// If we reach this part, there is no matching flight for the current booking.
-		fprintf(stderr, "Error! Could not find a matching flight for booking #%d\n", BLIt->bNum);
+		if (!foundMatch)
+		{
+			// If we reach this part, there is no matching flight for the current booking.
+			fprintf(stderr, "Error! Could not find a matching flight for booking #%d\n", BLIt->bNum);
+		}
 	}
 }
 
 /**
  * @brief 
  * 
- * @param flight 
- * @param booking 
- * @param row 
- * @param seat 
- * @return int 
+ * @param flight A linked list containing information about flights. Only uses
+ * the first element in the list.
+ * @param booking A linked list containing information about bookings. Only uses
+ * the first element in the list.
+ * @param row A reference to an integer variable used to store what row is
+ * booked. Used as a return value.
+ * @param seat A reference to an integer variable used to store what seat is
+ * booked. Used as a return value.
+ * @return int Returns 0 on unsuccessful allocating of a seat, and a positive
+ * integer if successful.
  */
 int allocateSeat(FLNode *flight, BLNode *booking, int *row, int *seat)
 {
-	return 0; // Check if a seat is available and return the row number and seat number.
+	if (!strcmp(booking->sClass, "first"))
+	{
+		// Try to allocate a seat in first class
+		for (int i = 0; i < flight->fRows * 7; i++)
+		{
+			if (flight->fSeatFlags[i] == 0)
+			{
+				flight->fSeatFlags[i] = 1;
+				*row = (int)(i / 7) + 1;
+				*seat = i + 1;
+				break; // break out of the loop when we are successful.
+			}
+		}
+	}
+	else if (!strcmp(booking->sClass, "business"))
+	{
+		// Try to allocate a seat in business class
+		for (int i = 0; i < flight->bRows * 7; i++)
+		{
+			if (flight->bSeatFlags[i] == 0)
+			{
+				flight->bSeatFlags[i] = 1;
+				*row = flight->fRows + (int)(i / 7) + 1;
+				*seat = flight->fRows * 7 + i + 1;
+				break; // break out of the loop when we are successful.
+			}
+		}
+	}
+	else
+	{
+		// Try to allocate a seat in economy class
+		for (int i = 0; i < flight->eRows * 7; i++)
+		{
+			if (flight->eSeatFlags[i] == 0)
+			{
+				flight->eSeatFlags[i] = 1;
+				*row = flight->bRows + flight->fRows + (int)(i / 7) + 1;
+				*seat = flight->bRows * 7 + flight->fRows * 7 + i + 1;
+				break; // break out of the loop when we are successful.
+			}
+		}
+	}
+
+	return *seat; // seat will be 0 if a seat wasn't assigned, which is all we care about.
 }
 
 /**
- * @brief 
+ * @brief This function creates a ticket in form of a file.
  * 
- * @param head 
+ * @param flight A linked list containing information about flights. Only uses
+ * the first element in the list.
+ * @param booking A linked list containing information about bookings. Only uses
+ * the first element in the list.
+ * @param row An integer containing what row the ticket is booked for.
+ * @param seat An integer containing what seat the ticket is booked for.
+ */
+void createTicket(FLNode *flight, BLNode *booking, int row, int seat)
+{
+	char filename[20];
+	sprintf(filename, "ticket-%d.txt", booking->bNum);
+	FILE *fp = fopen(filename,"w");
+
+	if(fp) {
+		fprintf(fp,"BOOKING: %d\n", booking->bNum);
+		fprintf(fp,"FLIGHT: %d DEPARTURE: %s DESTINATION: %s %s %s\n", flight->flNum, flight->dep, flight->des, flight->date, flight->time);
+		fprintf(fp,"PASSENGER %s %s\n", booking->fName, booking->surname);
+		fprintf(fp,"CLASS: %s\n", booking->sClass);
+		fprintf(fp,"ROW %d SEAT %d\n", row, seat);
+		fclose(fp);
+	}
+	else
+	{
+		fprintf(stderr, "Error! Could not create ticket with bookingnumber %d\n", booking->bNum);
+	}
+}
+
+/**
+ * @brief This function calls free() on every block of memory that was allocated
+ * with malloc in a linked list of the FLNode type.
+ * 
+ * @param head Pointer to the linked list we want to delete properly.
  */
 void deleteFList(FLNode *head)
 {
@@ -224,9 +309,10 @@ void deleteFList(FLNode *head)
 }
 
 /**
- * @brief 
+ * @brief This function calls free() on every block of memory that was allocated
+ * with malloc in a linked list of the BLNode type.
  * 
- * @param head 
+ * @param head Pointer to the linked list we want to delete properly.
  */
 void deleteBList(BLNode *head)
 {
