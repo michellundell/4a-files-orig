@@ -73,6 +73,7 @@ int main(int argc, char **argv)
 	// Add elements to the linked lists and create tickets.
 	fList = addFlights(argv[1]);
 	bList = addBookings(argv[2]);
+	// Create tickets if both lists were created properly.
 	if (fList && bList)
 	{
 		createTickets(fList, bList);
