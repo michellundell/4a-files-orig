@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -33,7 +34,7 @@ typedef struct flight_list_node
 	int *bSeats;	  // Flag for business class seats.
 	int *eSeats;	  // Flag for economy class seats.
 
-	struct flights_list_node *next;
+	struct flight_list_node *next;
 
 } FlightListNode;
 
@@ -54,22 +55,15 @@ typedef struct bookings_list_node
 
 FlightListNode *readFlight(const char *filename);
 BookingListNode *readBooking(const char *filename);
-int allocate_seat(BookingListNode *bookings, FlightListNode *flight, int *row, int *seat);
-int create_ticket (BookingListNode *bookings, FlightListNode *flight, int *row, int *seat);
-void print_ticket(BookingListNode *bookings, FlightListNode *flight, int *seat, int *row);
+int allocate_seat(FlightListNode *flight, BookingListNode *bookings, int *row, int *seat);
+int create_ticket(FlightListNode *flight, BookingListNode *bookings);
+void print_ticket(BookingListNode *blnp, FlightListNode *flnp, int seat, int row);
 
 int main(int argc, char const *argv[])
 {
-	FlightListNode *flights = NULL;
-	BookingListNode *bookings = NULL;
-
-	flights = readFlight(argv[1]);
-	bookings = readBooking(argv[2]);
-
-	if(flights && bookings)
-	{
-		create_tickets(flights, bookings);
-	}
+	FlightListNode *flight = readFlight("flights.csv");
+	BookingListNode *bookings = readBooking("bookings.csv");
+	create_ticket(flight, bookings);
 
 	return 0;
 }
@@ -84,38 +78,36 @@ int main(int argc, char const *argv[])
 FlightListNode *readFlight(const char *filename)
 {
 	FlightListNode flight, *head = NULL;
-	FILE *filename = fopen(filename, "r");
-	int create_ticket (BookingListNode *bookings, FlightListNode *flight, int *row, int *seat);
-	
+	FILE *fp = fopen(filename, "r");
 
-	while ((fscanf(filename, "%d, %[^,], %[^,], %[^,], %[^,], %d, %d, %d"), &flight.flightNo, flight.fDep, flight.fDest, flight.fDate, flight.fTime,
-			&flight.numberFSeats, &flight.numberBSeats, &flight.numberESeats) == 8)
+	while (fscanf(fp, "%d, %[^,], %[^,], %[^,], %[^,], %d, %d, %d", &flight.flightNo, flight.fDep, flight.fDest, flight.fDate, flight.fTime, &flight.numberFSeats, &flight.numberBSeats, &flight.numberESeats) == 8)
 	{
 
 		FlightListNode *newNode = malloc(sizeof(FlightListNode)); // Skapar en ny nod med storlek av structen FlightListNode
 		memcpy(newNode, &flight, sizeof(FlightListNode));		  // Kopierar värdena i flight till newNode
 
-		newNode->numberFSeats = malloc(flight.numberFSeats * 7); // Skapar en rad, 7st platser
-		memset(newNode, 0, sizeof(int) * 7);					 // Sätter varje värde till 0
+		newNode->fSeats = malloc(flight.numberFSeats * sizeof(int) * 7); // Skapar en rad, 7st platser
+		memset(newNode->fSeats, 0, flight.numberFSeats);			 // Sätter varje värde till 0
 
-		newNode->numberBSeats = malloc(flight.numberBSeats * 7);
-		memset(newNode, 0, sizeof(int) * 7);
+		newNode->bSeats = malloc(flight.numberBSeats * sizeof(int) * 7);
+		memset(newNode->bSeats, 0, flight.numberBSeats);
 
-		newNode->numberESeats = malloc(flight.numberESeats * 7);
-		memset(newNode, 0, sizeof(int) * 7);
+		newNode->eSeats = malloc(flight.numberESeats * sizeof(int) * 7);
+		memset(newNode->eSeats, 0, flight.numberESeats);
 
 		newNode->next = head;
 		head = newNode;
 	}
+	fclose(fp);
+	return (head);
 }
 
 BookingListNode *readBooking(const char *filename)
 {
-	BookingListNode bookings, *head;
-	FILE *filename = fopen(filename, "r");
+	BookingListNode bookings, *head = NULL;
+	FILE *fp = fopen(filename, "r");
 
-	while (fscanf(filename, "%d, %[^,], %[^,], %[^,], %[^,], %[^,], %[^,], %[^,], %[^,]", &bookings.bookingNo, bookings.date, bookings.time, bookings.dep,
-				  bookings.dest, bookings.class, bookings.fname, bookings.lname) == 8)
+	while (fscanf(fp, "%d, %[^,], %[^,], %[^,], %[^,], %[^,], %[^,], %[^\n]", &bookings.bookingNo, bookings.date, bookings.time, bookings.dep, bookings.dest, bookings.class, bookings.fname, bookings.lname) == 8)
 	{
 		BookingListNode *newNode = malloc(sizeof(BookingListNode));
 		memcpy(newNode, &bookings, sizeof(BookingListNode));
@@ -123,21 +115,23 @@ BookingListNode *readBooking(const char *filename)
 		newNode->next = head;
 		head = newNode;
 	}
+	fclose(fp);
+	return (head);
 }
 
-int allocate_seat(BookingListNode *bookings, FlightListNode *flight, int *row, int *seat)
+int allocate_seat(FlightListNode *flight, BookingListNode *bookings, int *row, int *seat)
 {
 	int seatNumber = 0;
 	int rowNumber = 0;
 	if (strcmp("first", bookings->class) == 0)
 	{
-		for (int i = 0; i < flight->fSeats; i++)
+		for (int p = 0; p < flight->numberFSeats*7; p++)
 		{
-			if (flight->fSeats[i] == 0)
+			if (flight->fSeats[p] == 0)
 			{
-				flight->fSeats[i] = 1;
-				seatNumber = i + 1;
-				rowNumber = (int)i / 7 + 1;
+				flight->fSeats[p] = 1;
+				seatNumber = p + 1;
+				rowNumber = (int)p / 7 + 1;
 				break;
 			}
 		}
@@ -145,67 +139,76 @@ int allocate_seat(BookingListNode *bookings, FlightListNode *flight, int *row, i
 
 	if (strcmp("business", bookings->class) == 0)
 	{
-		for (int i = 0; i < flight->bSeats; i++)
+		for (int p = 0; p < flight->numberBSeats*7; p++)
 		{
-			if (flight->bSeats[i] == 0)
+			if (flight->bSeats[p] == 0)
 			{
-				flight->bSeats[i] = 1;
-				seatNumber = i + flight->numberFSeats * 7 + 1;
-				rowNumber = (int)i / 7 + 1;
+				flight->bSeats[p] = 1;
+				seatNumber = p + flight->numberFSeats * 7 + 1;
+				rowNumber = flight->numberFSeats+(int)p / 7 + 1;
+				break;
 			}
 		}
 	}
 
 	if (strcmp("economy", bookings->class) == 0)
 	{
-		for (int i = 0; i < flight->eSeats; i++)
+		for (int p = 0; p < flight->numberESeats*7; p++)
 		{
-			if (flight->eSeats[i] == 0)
+			if (flight->eSeats[p] == 0)
 			{
-				flight->eSeats[i] = 1;
-				seatNumber = i + flight->numberBSeats + flight->numberFSeats * 7 + 1;
+				flight->eSeats[p] = 1;
+				seatNumber = p + flight->numberFSeats * 7 + flight->numberBSeats * 7 + 1;
+				rowNumber = flight->numberFSeats + flight->numberBSeats+(int)p / 7 + 1;
+				break;
 			}
 		}
 	}
 
-	row = rowNumber;
-	seat = seatNumber;
+	if (rowNumber == 0 || seatNumber == 0)
+	{
+		fprintf(stdout,"Could not find class %s on this plane.", bookings->class);
+	}
+
+	*row = rowNumber;
+	*seat = seatNumber;
 
 	return (1);
 }
 
-int create_ticket (BookingListNode *bookings, FlightListNode *flight, int *row, int *seat)
+int create_ticket(FlightListNode *flight, BookingListNode *bookings)
 {
 	int numberTickets = 0;
-	fprintf(stdout, "Writing tickets: ");
-	for(BookingListNode *blnp = bookings; blnp!=NULL; blnp = blnp->next)
+	fprintf(stdout, "Writing tickets: \n");
+	for (BookingListNode *blnp = bookings; blnp != NULL; blnp = blnp->next)
 	{
-		for(FlightListNode *flnp = flight; flnp!=NULL; flnp = flnp->next)
+		for (FlightListNode *flnp = flight; flnp != NULL; flnp = flnp->next)
 		{
-			if(!strcmp(blnp->dep, flnp->fDep) && !strcmp(blnp->dest, flnp->fDest) && !strcmp(blnp->time, flnp->fTime) && !strcmp(blnp->time, flnp->fTime))
+			if (!strcmp(blnp->dep, flnp->fDep) && !strcmp(blnp->dest, flnp->fDest) && !strcmp(blnp->date, flnp->fDate) && !strcmp(blnp->time, flnp->fTime))
 			{
-				int row=0, seat=0;
-				if(allocate_seat(flnp,blnp,&row,&seat)){
-					fprintf(stdout,"[ticket-%d.txt]",blnp->bookingNo);
-					print_ticket(blnp,flnp,seat,row);
+				int row = 0, seat = 0;
+				if (allocate_seat(flnp, blnp, &row, &seat))
+				{
+					fprintf(stdout, "[ticket-%d.txt]\n", blnp->bookingNo);
+					print_ticket(blnp, flnp, seat, row);
 					numberTickets++;
 				}
-
 			}
 		}
 	}
+
+	fprintf(stdout,"Created %d tickets\n", numberTickets);
+	return (numberTickets);
 }
 
-void print_ticket(BookingListNode *bookings, FlightListNode *flight, int *seat, int *row)
+void print_ticket(BookingListNode *blnp, FlightListNode *flnp, int seat, int row)
 {
 	char filename[255];
-	if(allocate_seat(bookings, flight, row, seat)==1)
+	sprintf(filename, "Ticket-{%d}", blnp->bookingNo);
+	FILE *fp = fopen(filename, "w");
+	if (fp)
 	{
-		sprintf(filename,"Ticket-{%d}", bookings->bookingNo);
-		FILE *fp = fopen(filename, "w");
-		if(fp)
-		fprintf(fp, "Booking: %d\nFlight: %s, Departure: %s, Destination: %s, Date: %s, Time: %s\nClass: %s\nRow: %d, Seat: %d", bookings->bookingNo, flight->flightNo, bookings->dep, bookings->dest);
+		fprintf(fp, "Booking: %d\nFlight: %d, Departure: %s, Destination: %s, Date: %s, Time: %s\nPassenger: %s %s\nClass: %s\nRow: %d, Seat: %d", blnp->bookingNo, flnp->flightNo, blnp->dep, blnp->dest, blnp->date, blnp->time, blnp->fname, blnp->lname, blnp->class, row, seat);
 		fclose(fp);
 	}
-
 }
