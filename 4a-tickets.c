@@ -52,6 +52,7 @@ BookReserveNode *read_bookings(const char *filename);
 int create_tickets(BookReserveNode *bookings, FlightReserveNode *flights);
 int allocate_seat(BookReserveNode *booking, FlightReserveNode *flight, int *row, int *seat);
 void print_ticket(BookReserveNode *brnp, FlightReserveNode *frnp, int seat, int row);
+void cancelFlight(FlightReserveNode *flight);
 
 /**
  * @brief Main entry point of the program.
@@ -81,6 +82,8 @@ int main(int argc, char const *argv[])
 		fprintf(stderr, "Error\n");
 		exit(-1);
 	}
+
+    cancelFlight(flights);
 
     return 0;
 
@@ -259,6 +262,59 @@ void print_ticket(BookReserveNode *brnp, FlightReserveNode *frnp, int seat, int 
 
 }
 
+/**
+ * @brief Cancel function to cancel flight if MAX passenger seats aren't full
+ * 
+ */
+/* -- CANCEL FLIGHT IF PLANE ISN'T FULL */
+void cancelFlight(FlightReserveNode *flight)
+{
+	int counter = 0;
+    for(FlightReserveNode *frnp = flight; frnp != NULL; frnp = frnp->next)
+    {	
+        // check if seats are occupied
+		for(int p = 0; p < frnp->fclass * 7; p++)
+        {
+            if(frnp->farr[p] > 0) 
+            // increment count of occupied seats
+				counter++;
+		}
 
+		for(int p = 0; p < frnp->bclass * 7; p++)
+		{
+			if(frnp->barr[p] > 0)
+				counter++;
+		}
 
+		for(int p = 0; p < frnp->eclass * 7; p++)
+		{
+			if(frnp->earr[p] > 0)
+				counter++;
+		}
+        
+        /* class row size(7) */
+        int size;
+        int *size1 = malloc(sizeof(flight->fclass) * 7);
+        int *size2 = malloc(sizeof(flight->bclass) * 7);
+        int *size3 = malloc(sizeof(flight->eclass) * 7);
 
+        size1, size2, size3 = &size;
+        // if occupied seats haven't reached max seats.
+		if(counter < size)
+		{
+			FILE *cancel = fopen("cancelled-flights.txt", "a");
+			if(cancel)
+			{
+				fprintf(cancel, "FLIGHT NO: %d TIME: %s STATUS: CANCELLED\n", frnp->flightnum, frnp->timestr);
+				fprintf(stdout, "Flight no. %d is cancelled\n", frnp->flightnum);
+            }
+			fclose(cancel);
+            counter = 0;
+		}
+        
+        free(size1);
+        free(size2);
+        free(size3);
+    }
+
+}
