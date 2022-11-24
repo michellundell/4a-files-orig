@@ -1,7 +1,7 @@
 /**
  * filename: 4a-tickets.c
  * user: Ali karimi
- * Email: ali_karimi5025@outlook.com
+ * Email: ali.karimi@studerande.movant.se
  * @brief this program generates tickets based on CSV data.
  * @version 0.1
  * date 2022-11-24
