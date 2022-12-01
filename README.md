@@ -1,23 +1,28 @@
 
-## Todays agenda
+## Compiling the program
 
 ```
-Review 4a-text-file.c, an example of writing and reading a text file.
-Review 4a-binary-file.c, an example of writing and reading a binary file.
+gcc 4a-ticket.c -o tickets
 ```
 
-## Todays assignment:
+## Running the program
 
 ```
-You should create a program that takes two arguments.
+./tickets bookings.csv flights.csv
+```
+
+## Description
+
+```
+The program takes two arguments.
 The first argument is a file with flight information.
 The second argument is a file with booking information.
-Your program should create files with a ticket for each booking.
+The program creates files with a ticket for each booking.
 ```
 
 **Example running the program:**
 ```
-4a-tickets.exe flights.csv booking.csv
+./tickets bookings.csv flights.csv
 ```
 
 **Will produce the files:**
