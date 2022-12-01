@@ -1,3 +1,4 @@
+#include <stdio.h>
 /**
  * @brief This program takes flight and booking information and 
  * create files with tickets.
@@ -18,6 +19,6 @@
 
 int main(int argc, char **argv)
 {
-	print("%s\n",argv[0]);
+	printf("%s\n",argv[0]);
 	return 0;
 }
